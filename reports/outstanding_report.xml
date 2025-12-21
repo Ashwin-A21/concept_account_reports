@@ -1,0 +1,95 @@
+<odoo>
+
+  <!-- Tree View -->
+  <record id="view_outstanding_report_tree" model="ir.ui.view">
+    <field name="name">concept.outstanding.report.tree</field>
+    <field name="model">concept.outstanding.report</field>
+    <field name="arch" type="xml">
+      <tree string="Partner Ledger" create="false" edit="false" delete="false">
+        <field name="partner_id" widget="many2one_clickable"/>
+        <field name="date"/>
+        <field name="journal_id" widget="many2one_clickable"/>
+        <field name="move_id" widget="many2one_clickable"/>
+        <field name="entry_label"/>
+        <field name="debit" widget="float" digits="[16, 3]"/>
+        <field name="credit" widget="float" digits="[16, 3]"/>
+        <field name="balance" widget="float" digits="[16, 3]"/> 
+        <field name="state"/> 
+        <field name="due_date" optional="show"/>
+        <field name="due_amount" optional="show" widget="float" digits="[16, 3]"/>
+        <field name="due_days" optional="show"/>
+        <field name="status" optional="show"/>
+      </tree>
+    </field>
+  </record>
+
+  <!-- Search View -->
+  <record id="view_outstanding_report_search" model="ir.ui.view">
+    <field name="name">concept.outstanding.report.search</field>
+    <field name="model">concept.outstanding.report</field>
+    <field name="arch" type="xml">
+      <search string="Partner Ledger Search">
+
+        <!-- <searchpanel>
+          <field name="partner_id" string="Partner"/>
+          <field name="journal_id" string="Journal"/>
+          <field name="account_id" string="Account"/>
+        </searchpanel> -->
+
+        <field name="partner_id"/>
+        <field name="journal_id"/>
+        <field name="account_id"/>
+        <field name="company_id"/>
+
+        <separator/>
+        <filter name="posted_only" string="Posted" domain="[('move_id.state','=','posted')]"/>
+        <filter name="draft_only" string="Draft" domain="[('move_id.state','=','draft')]"/>
+
+        <separator/>
+        <!-- <filter name="reconciled" string="Reconciled" domain="[('reconciled','=',True)]"/>
+        <filter name="unreconciled" string="Unreconciled" domain="[('reconciled','=',False)]"/> -->
+
+        <separator/>
+        <filter name="today" string="Today" domain="[('date', '=', context_today())]"/>
+        <filter name="yesterday" string="Yesterday" domain="[('date', '=', (context_today() - relativedelta(days=1)))]"/>
+        <filter name="this_month" string="This Month" domain="[('date', '&gt;=', context_today().strftime('%Y-%m-01')), ('date', '&lt;=', context_today())]" />
+        <separator/>
+          <filter name="filter_invoice_date" string="Invoice Date" date="invoice_date"/>
+          <filter name="filter_due_date" string="Due Date" date="invoice_due_date"/>
+          <filter name="filter_date" string="Date" date="date"/>
+
+        <group expand="0" string="Group By">
+          <filter name="group_by_account" string="Account" context="{'group_by':'account_id'}"/>
+          <filter name="group_by_journal" string="Journal" context="{'group_by':'journal_id'}"/>
+          <filter name="group_by_partner" string="Partner" context="{'group_by':'partner_id'}"/> 
+          <filter name="group_by_analytic" string="Analytic Account" context="{'group_by':'analytic_account_id'}"/>
+          <separator/>
+          <filter name="group_by_company" string="Company" context="{'group_by': 'company_id'}"/>
+          <separator/>
+          <filter name="group_by_date" string="Date" context="{'group_by': 'date'}"/>
+          <filter name="group_by_invoice_date" string="Invoice Date" context="{'group_by': 'invoice_date'}"/>
+          <filter name="group_by_due_date" string="Due Date" context="{'group_by': 'due_date'}"/>
+          
+        </group>
+      </search>
+    </field>
+  </record>
+
+  <!-- Action -->
+  <record id="action_outstanding_report" model="ir.actions.act_window">
+    <field name="name">Outstanding Report</field>
+    <field name="res_model">concept.outstanding.report</field>
+    <field name="view_mode">tree</field>
+    <field name="search_view_id" ref="view_outstanding_report_search"/>
+    <field name="domain">[('company_id', 'in', context.get('allowed_company_ids', []))]</field>
+    <field name="context">{'group_by': 'partner_id'}</field>
+  </record>
+
+  <!-- Menu -->
+  <menuitem id="menu_outstanding_report_report"
+            name="Outstanding Report"
+            parent="menu_concept_account_root"
+            action="action_outstanding_report"
+            sequence="3"/>
+
+</odoo>

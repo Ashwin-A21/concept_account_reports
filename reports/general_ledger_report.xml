@@ -1,0 +1,139 @@
+<odoo>
+  <!-- Tree View -->
+  <record id="view_general_ledger_tree" model="ir.ui.view">
+    <field name="name">concept.general.ledger.tree</field>
+    <field name="model">concept.general.ledger</field>
+    <field name="arch" type="xml">
+      <tree string="General Ledger"> 
+        <field name="account_id" widget="many2one_clickable"/>
+        <field name="date"/>
+        <field name="journal_id" widget="many2one_clickable"/>
+        <field name="partner_id" widget="many2one_clickable"/>
+        <!-- <field name="move_name"/> -->
+        <field name="move_id" widget="many2one_clickable"/>
+        <field name="entry_label"/>
+        <field name="state"/>
+        <field name="debit" widget="float" digits="[16, 3]"/>
+        <field name="credit" widget="float" digits="[16, 3]"/>
+        <field name="balance" widget="float" digits="[16, 3]"/>
+      </tree>
+    </field>
+  </record>
+
+  <!-- Action with default group_by -->
+  <record id="action_general_ledger" model="ir.actions.act_window">
+    <field name="name">General Ledger</field>
+    <field name="res_model">concept.general.ledger</field>
+    <field name="view_mode">tree</field>
+    <field name="domain">[('company_id', 'in', context.get('allowed_company_ids', []))]</field>
+    <field name="context">{'group_by': 'account_id'}</field>
+
+  </record>  
+
+   <record id="view_general_ledger_search" model="ir.ui.view">
+      <field name="name">concept.general.ledger.search</field>
+      <field name="model">concept.general.ledger</field>
+      <field name="arch" type="xml">
+        <search string="General Ledger Search">
+<!-- 
+          <searchpanel>
+              <field name="account_id" string="Account"/>
+              <field name="journal_id" string="Journal"/>
+              <field name="analytic_account_id" string="Analytic Account"/> 
+          </searchpanel> -->
+
+          <field name="analytic_account_id" string="Analytic Account"/> 
+          <field name="partner_id" string="Partner"/> 
+          <field name="account_id" string="Account" options="{'no_create': True, 'filter_domain': []}" domain="[]"/> 
+          <field name="journal_id" string="Journal"/> 
+          <field name="company_id"/>
+  
+          <filter name="today" string="Today" domain="[('date', '=', context_today())]"/>  
+          <filter name="yesterday" string="Yesterday" domain="[('date', '=', (context_today() - relativedelta(days=1)))]"/>
+          <filter name="this_month" string="This Month" domain="[('date', '&gt;=', context_today().strftime('%Y-%m-01')), ('date', '&lt;=', context_today())]" />
+
+          <separator/>
+          <filter name="posted_only" string="Posted" domain="[('move_id.state','=','posted')]"/>
+          <filter name="draft_only" string="Draft" domain="[('move_id.state','=','draft')]"/>
+ 
+          <separator/>
+          <filter name="reconciled" string="Reconciled" domain="[('reconciled','=',True)]"/>
+          <filter name="unreconciled" string="Unreconciled" domain="[('reconciled','=',False)]"/>
+
+          <separator/>
+
+          <filter name="expense_accounts" 
+                  string="Expense Accounts" 
+                  domain="[('account_id.account_type','=','expense')]"/>
+
+          <filter name="cost_of_revenue_accounts" 
+                  string="Cost of Revenue" 
+                  domain="[('account_id.account_type','=','expense_direct_cost')]"/>
+          <separator/>
+
+          
+          <filter name="sales_journal" string="Sales" domain="[('journal_id.type','=','sale')]"/>
+          <filter name="purchase_journal" string="Purchases" domain="[('journal_id.type','=','purchase')]"/>
+          <filter name="bank_journal" string="Bank" domain="[('journal_id.type','=','bank')]"/>
+          <filter name="cash_journal" string="Cash" domain="[('journal_id.type','=','cash')]"/>
+          <filter name="misc_journal" string="Miscellaneous" domain="[('journal_id.type','=','general')]"/>
+
+          <separator/>
+
+          <separator string="Accounts"/>
+            <!-- Payable -->
+          <filter name="payable_accounts" string="Payable"
+                  domain="['&amp;', ('account_id.account_type','=','liability_payable'), ('account_id.non_trade','=',False)]"/>
+          
+
+          <!-- Receivable -->
+          <filter name="receivable_accounts" string="Receivable"
+                  domain="['&amp;', ('account_id.account_type','=','asset_receivable'), ('account_id.non_trade','=',False)]"/>
+          
+
+
+          <!-- Profit & Loss -->
+          <filter name="pl_accounts" string="P&amp;L Accounts"
+                  domain="[('account_id.internal_group','in',['income','expense'])]"/>
+                  
+          <separator/>
+          
+          <filter name="filter_date" string="Date" date="date"/>
+
+          <group expand="0" string="Group By">
+            <filter name="group_by_account" string="Account" context="{'group_by':'account_id'}"/>
+            <filter name="group_by_journal" string="Journal" context="{'group_by':'journal_id'}"/>
+            <filter name="group_by_partner" string="Partner" context="{'group_by':'partner_id'}"/> 
+            <filter name="group_by_analytic" string="Analytic Account" context="{'group_by':'analytic_account_id'}"/>   
+            <separator/>
+            <filter name="group_by_company" string="Company" context="{'group_by': 'company_id'}"/>
+            <separator/>
+            <filter name="group_by_date" string="Date" context="{'group_by': 'date'}"/>
+            <!-- <filter name="group_by_invoice_date" string="Invoice Date" context="{'group_by': 'invoice_date'}"/>
+            <filter name="group_by_due_date" string="Due Date" context="{'group_by': 'due_date'}"/> -->
+
+          </group>
+        </search>
+      </field>
+    </record>
+
+
+  <!-- Link search view to action -->
+  <record id="action_general_ledger" model="ir.actions.act_window">
+    <field name="search_view_id" ref="view_general_ledger_search"/>
+  </record>
+ 
+  <!-- Menu -->
+  <!-- <menuitem id="menu_concept_account_root"  parent="account.menu_finance" name="Additional Reports" sequence="10"/> -->
+ 
+  <menuitem name="CG Reports"
+              id="menu_concept_account_root"
+              parent="account.menu_finance"
+              sequence="3"/>
+  <menuitem id="menu_general_ledger_report" name="General Ledger" parent="menu_concept_account_root" action="action_general_ledger" sequence="1"/> 
+  
+
+
+
+
+</odoo>
